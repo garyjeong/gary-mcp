@@ -16,6 +16,7 @@ from src.tools.code_analysis_tool import CodeAnalysisService
 from src.tools.db_tool import DatabaseService
 from src.tools.document_tool import DocumentService
 from src.tools.flyio_tool import FlyioService
+from src.tools.github_tool import GitHubService
 from src.tools.official_docs import OfficialDocsService
 from src.tools.pdf_tool import PDFService
 
@@ -61,6 +62,7 @@ pdf_service = PDFService()
 code_analysis_service = CodeAnalysisService()
 db_service = DatabaseService()
 official_docs_service = OfficialDocsService()
+github_service = GitHubService()
 
 
 def _schema(properties: Dict[str, Any], required: Sequence[str] | None = None) -> Dict[str, Any]:
@@ -218,6 +220,39 @@ async def _handle_search_official_docs(arguments: dict[str, Any]) -> Any:
         _require(arguments, "query"),
         arguments.get("name"),
         arguments.get("limit", 5)
+    )
+
+
+async def _handle_github_cli_execute(arguments: dict[str, Any]) -> Any:
+    command = _require(arguments, "command")
+    args_list = arguments.get("args") or []
+    if not isinstance(args_list, list):
+        raise ValueError("args must be an array of strings")
+    return await github_service.execute([command, *args_list])
+
+
+async def _handle_github_list_repos(arguments: dict[str, Any]) -> Any:
+    return await github_service.list_repos(
+        owner=arguments.get("owner"),
+        visibility=arguments.get("visibility"),
+        limit=arguments.get("limit", 20),
+        sort=arguments.get("sort", "updated")
+    )
+
+
+async def _handle_github_list_prs(arguments: dict[str, Any]) -> Any:
+    return await github_service.list_pull_requests(
+        repo=_require(arguments, "repo"),
+        state=arguments.get("state", "open"),
+        limit=arguments.get("limit", 20)
+    )
+
+
+async def _handle_github_list_issues(arguments: dict[str, Any]) -> Any:
+    return await github_service.list_issues(
+        repo=_require(arguments, "repo"),
+        state=arguments.get("state", "open"),
+        limit=arguments.get("limit", 20)
     )
 
 
@@ -459,6 +494,58 @@ def _build_tool_definitions() -> List[ToolDefinition]:
                 ["query"]
             ),
             handler=_handle_search_official_docs
+        ),
+        ToolDefinition(
+            name="github_cli_execute",
+            description="GitHub CLI 명령을 실행합니다.",
+            schema=_schema(
+                {
+                    "command": {"type": "string", "description": "실행할 gh 하위 커맨드 (예: 'repo', 'issue', 'pr')"},
+                    "args": {"type": "array", "items": {"type": "string"}, "description": "추가 인자 목록 (선택)"}
+                },
+                ["command"]
+            ),
+            handler=_handle_github_cli_execute
+        ),
+        ToolDefinition(
+            name="github_list_repos",
+            description="GitHub CLI로 레포지토리 목록을 조회합니다.",
+            schema=_schema(
+                {
+                    "owner": {"type": "string", "description": "특정 사용자/조직 (선택)"},
+                    "visibility": {"type": "string", "description": "public, private, internal 중 하나 (선택)"},
+                    "limit": {"type": "integer", "description": "조회할 레포 수 (기본값 20)", "default": 20},
+                    "sort": {"type": "string", "description": "정렬 기준 (기본값 updated)", "default": "updated"}
+                },
+                None
+            ),
+            handler=_handle_github_list_repos
+        ),
+        ToolDefinition(
+            name="github_list_pull_requests",
+            description="지정한 레포지토리의 PR을 조회합니다.",
+            schema=_schema(
+                {
+                    "repo": {"type": "string", "description": "레포지토리 (예: owner/repo)"},
+                    "state": {"type": "string", "description": "open, closed, all 중 하나", "default": "open"},
+                    "limit": {"type": "integer", "description": "조회할 PR 수 (기본값 20)", "default": 20}
+                },
+                ["repo"]
+            ),
+            handler=_handle_github_list_prs
+        ),
+        ToolDefinition(
+            name="github_list_issues",
+            description="지정한 레포지토리의 이슈를 조회합니다.",
+            schema=_schema(
+                {
+                    "repo": {"type": "string", "description": "레포지토리 (예: owner/repo)"},
+                    "state": {"type": "string", "description": "open, closed, all 중 하나", "default": "open"},
+                    "limit": {"type": "integer", "description": "조회할 이슈 수 (기본값 20)", "default": 20}
+                },
+                ["repo"]
+            ),
+            handler=_handle_github_list_issues
         )
     ]
 

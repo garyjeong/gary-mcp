@@ -5,6 +5,7 @@ import pytest
 from src.tools.aws_tool import AWSService
 from src.tools.cli_executor import CLIResult, CLIService
 from src.tools.flyio_tool import FlyioService
+from src.tools.github_tool import GitHubService
 
 
 @pytest.mark.asyncio
@@ -50,3 +51,15 @@ async def test_flyio_service_uses_cli(monkeypatch, tmp_path):
     service.cli.run = fake_run  # type: ignore[assignment]
     result = await service.list_apps()
     assert result["output"][0]["name"] == "app"
+
+
+@pytest.mark.asyncio
+async def test_github_service_uses_cli(monkeypatch):
+    service = GitHubService()
+
+    async def fake_run(*args):
+        return CLIResult(True, [{"nameWithOwner": "owner/repo"}], None, "gh repo list")
+
+    service.cli.run = fake_run  # type: ignore[assignment]
+    result = await service.list_repos(owner="owner")
+    assert result["output"][0]["nameWithOwner"] == "owner/repo"
