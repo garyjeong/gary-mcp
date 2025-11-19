@@ -69,9 +69,14 @@ python -m src.server
 
 ## Cursor IDE 연동
 
-### 1. Cursor 설정 파일 생성
+### 설정 파일 위치
 
-Cursor IDE의 설정 파일에 MCP 서버를 추가합니다:
+Cursor IDE의 MCP 설정 파일은 다음 위치에 있습니다:
+- **macOS**: `~/.cursor/mcp.json` 또는 `~/Library/Application Support/Cursor/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+
+### 방법 1: Docker를 사용하는 경우 (권장)
+
+Docker 컨테이너로 실행하는 방법입니다. 모든 의존성이 컨테이너에 포함되어 있어 안정적입니다.
 
 ```json
 {
@@ -85,6 +90,7 @@ Cursor IDE의 설정 파일에 MCP 서버를 추가합니다:
         "-v", "/Users/gary/Documents/workspace:/workspace:ro",
         "-v", "/Users/gary/.aws:/root/.aws:ro",
         "-v", "/Users/gary/.zshrc:/root/.zshrc:ro",
+        "-v", "/Users/gary/Documents/workspace/gary-mcp/.env:/app/.env:ro",
         "-e", "WORKSPACE_PATH=/workspace",
         "-e", "AWS_PROFILE=jongmun",
         "-e", "SHELL_RC_PATH=/root/.zshrc",
@@ -95,9 +101,115 @@ Cursor IDE의 설정 파일에 MCP 서버를 추가합니다:
 }
 ```
 
-### 2. Cursor 재시작
+**주의사항:**
+- Docker 이미지가 먼저 빌드되어 있어야 합니다: `docker build -t gary-mcp-server .`
+- `.env` 파일이 있다면 볼륨 마운트로 포함시킬 수 있습니다.
 
-설정을 저장한 후 Cursor IDE를 재시작하면 MCP 서버가 연결됩니다.
+### 방법 2: 로컬 Python 환경을 사용하는 경우
+
+로컬에서 직접 실행하는 방법입니다. 개발 중이거나 Docker 없이 테스트할 때 유용합니다.
+
+```json
+{
+  "mcpServers": {
+    "gary-mcp": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "src.server"
+      ],
+      "cwd": "/Users/gary/Documents/workspace/gary-mcp",
+      "env": {
+        "WORKSPACE_PATH": "/Users/gary/Documents/workspace",
+        "AWS_PROFILE": "jongmun",
+        "SHELL_RC_PATH": "/Users/gary/.zshrc"
+      }
+    }
+  }
+}
+```
+
+**주의사항:**
+- 프로젝트 디렉토리에서 의존성이 설치되어 있어야 합니다: `uv pip install -e .`
+- `WORKSPACE_PATH`는 절대 경로로 지정하는 것을 권장합니다.
+
+### 방법 3: uv를 사용하는 경우
+
+uv를 통해 가상 환경을 자동으로 관리하면서 실행하는 방법입니다.
+
+```json
+{
+  "mcpServers": {
+    "gary-mcp": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory", "/Users/gary/Documents/workspace/gary-mcp",
+        "python",
+        "-m",
+        "src.server"
+      ],
+      "env": {
+        "WORKSPACE_PATH": "/Users/gary/Documents/workspace",
+        "AWS_PROFILE": "jongmun",
+        "SHELL_RC_PATH": "/Users/gary/.zshrc"
+      }
+    }
+  }
+}
+```
+
+### 설정 적용 및 확인
+
+1. **설정 파일에 JSON 추가**: 위의 설정 중 하나를 선택하여 `~/.cursor/mcp.json`에 추가합니다.
+2. **Cursor IDE 재시작**: 설정을 저장한 후 Cursor IDE를 완전히 재시작합니다.
+3. **연결 확인**: Cursor 왼쪽 사이드바의 MCP 섹션에서 `gary-mcp` 서버가 연결되었는지 확인합니다.
+4. **도구 사용**: AI 채팅에서 `list_databases`, `run_query`, `read_document` 등의 도구를 사용할 수 있습니다.
+
+### 환경 변수 설정
+
+#### 워크스페이스 경로
+- `WORKSPACE_PATH`: 문서를 탐색할 워크스페이스 경로
+  - Docker: 컨테이너 내부 경로 (예: `/workspace`)
+  - 로컬: 호스트 절대 경로 (예: `/Users/gary/Documents/workspace`)
+
+#### AWS 설정
+- `AWS_PROFILE`: 사용할 AWS 프로필 이름 (기본값: `jongmun`)
+- AWS 자격 증명은 `~/.aws` 디렉토리 또는 `.zshrc`의 환경 변수에서 자동으로 로드됩니다.
+
+#### Fly.io 설정
+- Fly.io 자격 증명은 `.zshrc`의 `FLY_*` 환경 변수에서 자동으로 로드됩니다.
+
+#### 데이터베이스 설정
+- `.env` 파일 또는 환경 변수로 DB 연결 정보를 설정할 수 있습니다.
+- 자세한 내용은 [데이터베이스 연결 오류](#데이터베이스-연결-오류) 섹션을 참조하세요.
+
+## 공식 문서 미러링
+
+LLM이 인터넷 없이도 공식 문서를 사용할 수 있도록 `docs/manifest.yaml`에 정의된 소스를 로컬에 캐시합니다.
+
+### 1. 문서 동기화
+
+```bash
+# 모든 문서를 동기화
+python scripts/sync_docs.py
+
+# 특정 문서만 동기화
+python scripts/sync_docs.py python fastapi
+```
+
+- Python, FastAPI, React, TypeScript, Go 문서를 기본으로 포함하고 있습니다.
+- 결과는 `docs/mirror/<이름>/<버전>` 구조로 저장되며, `.gitignore`에 의해 저장소 커밋 대상에서 제외됩니다.
+
+### 2. MCP 도구
+
+- `sync_official_docs`: MCP 내부에서 문서를 동기화합니다 (`names` 배열로 특정 문서만 선택 가능).
+- `list_official_docs`: 현재 캐시된 문서 목록과 버전을 조회합니다.
+- `search_official_docs`: 미러된 공식 문서를 빠르게 검색합니다 (`name`으로 범위를 제한할 수 있음).
+
+### 3. DocumentService 연동
+
+`WORKSPACE_PATH=/Users/gary/Documents/workspace`로 설정하면 `docs/mirror`가 자동으로 인덱싱되므로 기존 `read_document`/`search_documents` 도구에서도 공식 문서를 참조할 수 있습니다. 새로운 문서를 추가하려면 `docs/manifest.yaml`에 항목을 추가한 뒤 `scripts/sync_docs.py`를 실행하면 됩니다.
 
 ## 사용 가능한 도구
 
@@ -285,6 +397,92 @@ Fly.io 앱 로그를 조회합니다.
 }
 ```
 
+### 데이터베이스 관련 도구
+
+#### `list_databases`
+데이터베이스 목록을 조회합니다.
+
+**파라미터:**
+- `db_name` (선택): DB 이름
+- `connection_string` (선택): 직접 연결 문자열 (예: `postgresql+asyncpg://user:pass@host:5432/db`)
+- `use_dotenv` (선택): .env 파일 사용 (기본값: true)
+- `use_aws_secrets` (선택): AWS Secrets Manager 사용
+- `aws_secret_name` (선택): AWS 시크릿 이름
+- `use_github_secrets` (선택): GitHub Secrets 사용
+- `github_secret_name` (선택): GitHub 시크릿 이름
+- `github_repo` (선택): GitHub 저장소
+
+**예시:**
+```json
+{
+  "connection_string": "postgresql+asyncpg://user:pass@localhost:5432/mydb"
+}
+```
+
+#### `describe_tables`
+테이블 스키마를 조회합니다.
+
+**파라미터:**
+- `db_name` (선택): DB 이름
+- `connection_string` (선택): 직접 연결 문자열
+- `database` (선택): 특정 데이터베이스 이름
+- `use_dotenv`, `use_aws_secrets`, `aws_secret_name`, `use_github_secrets`, `github_secret_name`, `github_repo` (선택): 자격 증명 소스
+
+**예시:**
+```json
+{
+  "connection_string": "sqlite+aiosqlite:///./test.db"
+}
+```
+
+#### `run_query`
+SQL 쿼리를 실행합니다 (기본 read-only, 필요시 read-write 모드 지정).
+
+**파라미터:**
+- `query` (필수): 실행할 SQL 쿼리
+- `db_name` (선택): DB 이름
+- `connection_string` (선택): 직접 연결 문자열
+- `parameters` (선택): 쿼리 파라미터 (dict)
+- `limit` (선택): 결과 행 수 제한 (기본값: 100)
+- `mode` (선택): 실행 모드 - `read_only` 또는 `read_write` (기본값: `read_only`)
+- `use_dotenv`, `use_aws_secrets`, `aws_secret_name`, `use_github_secrets`, `github_secret_name`, `github_repo` (선택): 자격 증명 소스
+
+**예시:**
+```json
+{
+  "query": "SELECT * FROM users WHERE id = :id",
+  "parameters": {"id": 1},
+  "connection_string": "postgresql+asyncpg://user:pass@localhost:5432/mydb",
+  "mode": "read_only"
+}
+```
+
+**주의사항:**
+- 기본 모드는 `read_only`이며, INSERT/UPDATE/DELETE 등의 쓰기 작업은 차단됩니다.
+- 쓰기 작업이 필요한 경우 `mode: "read_write"`를 명시적으로 지정해야 합니다.
+- 환경 변수나 `.env` 파일에서 `DATABASE_URL` 또는 개별 DB 파라미터를 설정할 수 있습니다.
+- AWS Secrets Manager나 GitHub Secrets를 사용하여 자격 증명을 안전하게 관리할 수 있습니다.
+
+### 공식 문서 도구
+
+#### `sync_official_docs`
+공식 문서를 로컬에 동기화합니다.
+
+**파라미터:**
+- `names` (선택): 동기화할 문서 이름 배열
+- `force` (선택): 향후 확장용 플래그 (기본 false)
+
+#### `list_official_docs`
+현재 미러된 공식 문서 목록을 반환합니다.
+
+#### `search_official_docs`
+미러된 문서에서 키워드를 검색합니다.
+
+**파라미터:**
+- `query` (필수): 검색 키워드
+- `name` (선택): 특정 문서 이름
+- `limit` (선택): 결과 수 제한 (기본 5)
+
 ## 프로젝트 구조
 
 ```
@@ -298,13 +496,26 @@ gary-mcp/
 │   │   ├── aws_tool.py        # AWS CLI 도구
 │   │   ├── flyio_tool.py      # Fly.io 도구
 │   │   ├── pdf_tool.py        # 마크다운→PDF 변환
-│   │   └── code_analysis_tool.py  # 코드 분석 도구
+│   │   ├── code_analysis_tool.py  # 코드 분석 도구
+│   │   └── db_tool.py         # 데이터베이스 접근 도구
+│   ├── infrastructure/
+│   │   └── db/
+│   │       └── connection_manager.py  # DB 연결 관리
 │   └── utils/
 │       ├── __init__.py
-│       └── file_utils.py      # 파일 유틸리티
+│       ├── file_utils.py      # 파일 유틸리티
+│       └── env_loader.py      # 환경 변수/시크릿 로더
+├── tests/
+│   ├── __init__.py
+│   ├── test_document_service.py
+│   ├── test_pdf_service.py
+│   ├── test_code_analysis_service.py
+│   ├── test_cli_services.py
+│   └── test_db_tool.py        # DB 도구 테스트
 ├── pyproject.toml             # uv 프로젝트 설정
 ├── Dockerfile                 # Docker 이미지 정의
 ├── .dockerignore              # Docker 빌드 제외 파일
+├── .env.example               # 환경 변수 예시
 └── README.md                  # 이 파일
 ```
 
@@ -314,9 +525,13 @@ gary-mcp/
 - **uv**: 빠른 Python 패키지 관리자
 - **MCP SDK**: Model Context Protocol Python SDK
 - **asyncio**: 비동기 파일/프로세스 처리
+- **SQLAlchemy**: ORM 및 DB 연결 관리
+- **asyncpg/aiomysql/aiosqlite**: 비동기 DB 드라이버
 - **weasyprint**: 마크다운→PDF 변환
 - **AWS CLI**: AWS 리소스 관리
 - **Fly.io CLI**: Fly.io 앱 관리
+- **boto3**: AWS Secrets Manager 연동
+- **python-dotenv**: .env 파일 로딩
 
 ## 트러블슈팅
 
@@ -364,6 +579,42 @@ gary-mcp/
 **해결 방법:**
 1. Docker 볼륨 마운트가 올바르게 설정되었는지 확인
 2. 파일 경로가 `/workspace`로 시작하는지 확인 (Docker 컨테이너 내부 경로)
+
+### 데이터베이스 연결 오류
+
+**문제**: DB 연결이 실패합니다.
+
+**해결 방법:**
+1. 환경 변수나 `.env` 파일에 올바른 연결 정보가 설정되었는지 확인:
+   ```bash
+   # .env 파일 예시
+   DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname
+   # 또는
+   DB_TYPE=postgresql
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_USER=user
+   DB_PASSWORD=password
+   DB_NAME=dbname
+   ```
+2. AWS Secrets Manager 사용 시:
+   - IAM 권한이 올바르게 설정되었는지 확인
+   - `aws_secret_name`이 정확한지 확인
+3. GitHub Secrets 사용 시:
+   - `gh auth login`으로 인증이 완료되었는지 확인
+   - 저장소에 대한 접근 권한이 있는지 확인
+4. Docker 컨테이너에서 로컬 DB에 접근하는 경우:
+   - `--network host` 옵션 사용 또는 포트 포워딩 설정
+
+### 공식 문서 동기화 오류
+
+**문제**: `sync_official_docs` 또는 `scripts/sync_docs.py` 실행 시 실패합니다.
+
+**해결 방법:**
+1. `git`, `tar`, `zip` 등이 시스템에 설치되어 있는지 확인합니다.
+2. 인터넷/프록시 설정을 확인하고 필요한 경우 `HTTPS_PROXY` 환경 변수를 설정합니다.
+3. `docs/manifest.yaml`의 URL과 브랜치가 유효한지 확인합니다.
+4. 캐시를 초기화하려면 `rm -rf docs/mirror docs/sources` 후 다시 동기화합니다.
 
 ## 개발
 

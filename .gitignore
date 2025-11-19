@@ -9,3 +9,7 @@ build/
 .env
 .env.*
 awscliv2.zip
+docs/mirror/
+docs/sources/
+docs/tmp/
+.mypy_cache/

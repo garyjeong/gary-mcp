@@ -14,7 +14,11 @@ class DocumentService:
 
     def __init__(self, workspace_path: Optional[str | Path] = None, max_documents: int = 10) -> None:
         resolved_path = workspace_path or os.getenv("WORKSPACE_PATH", "/workspace")
-        self.workspace_path = Path(resolved_path)
+        path = Path(resolved_path)
+        # 상대 경로인 경우 현재 작업 디렉토리 기준으로 해석
+        if not path.is_absolute():
+            path = Path.cwd() / path
+        self.workspace_path = path.resolve()
         self.max_documents = max_documents
 
     async def scan_projects(self) -> List[Dict[str, Any]]:

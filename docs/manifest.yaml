@@ -1,0 +1,42 @@
+# 공식 문서 미러링 대상 정의
+# 각 항목은 name, type, source 정보를 포함합니다.
+docs:
+  - name: python
+    type: archive
+    version: "3.12"
+    url: "https://docs.python.org/3/archives/python-3.12.0-docs-html.tar.bz2"
+    archive_format: tar
+    strip_components: 1
+    target: python/3.12
+
+  - name: fastapi
+    type: git
+    version: "latest"
+    repo: "https://github.com/tiangolo/fastapi.git"
+    ref: master
+    doc_path: docs/en/docs
+    target: fastapi/latest
+
+  - name: react
+    type: git
+    version: "main"
+    repo: "https://github.com/reactjs/react.dev.git"
+    ref: main
+    doc_path: src/content
+    target: react/main
+
+  - name: typescript
+    type: git
+    version: "main"
+    repo: "https://github.com/microsoft/TypeScript-Website.git"
+    ref: main
+    doc_path: packages/documentation/copy/en
+    target: typescript/main
+
+  - name: go
+    type: git
+    version: "master"
+    repo: "https://github.com/golang/go.git"
+    ref: master
+    doc_path: doc
+    target: go/master
