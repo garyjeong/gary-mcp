@@ -40,3 +40,76 @@ docs:
     ref: master
     doc_path: doc
     target: go/master
+
+  - name: aws-main
+    type: http
+    version: "latest"
+    target: aws/latest
+    pages:
+      - url: https://docs.aws.amazon.com/
+
+  - name: python-main
+    type: http
+    version: "3.x"
+    target: python/main
+    pages:
+      - url: https://docs.python.org/3/
+    http_headers:
+      User-Agent: "gary-mcp-doc-mirror/1.0"
+    http_timeout: 30
+
+  - name: fastapi-main
+    type: http
+    version: "latest"
+    target: fastapi/main-site
+    pages:
+      - url: https://fastapi.tiangolo.com/
+
+  - name: docker-main
+    type: http
+    version: "latest"
+    target: docker/main
+    pages:
+      - url: https://docs.docker.com/
+
+  - name: kubernetes-main
+    type: http
+    version: "latest"
+    target: kubernetes/main
+    pages:
+      - url: https://kubernetes.io/docs/home/
+
+  - name: flyio-main
+    type: http
+    version: "latest"
+    target: flyio/main
+    pages:
+      - url: https://fly.io/docs/
+
+  - name: postgresql-main
+    type: http
+    version: "current"
+    target: postgresql/main
+    pages:
+      - url: https://www.postgresql.org/docs/current/index.html
+
+  - name: redis-main
+    type: http
+    version: "latest"
+    target: redis/main
+    pages:
+      - url: https://redis.io/docs/latest/
+
+  - name: nextjs-main
+    type: http
+    version: "latest"
+    target: nextjs/main
+    pages:
+      - url: https://nextjs.org/docs
+
+  - name: tailwindcss-main
+    type: http
+    version: "latest"
+    target: tailwindcss/main
+    pages:
+      - url: https://tailwindcss.com/docs

@@ -190,7 +190,7 @@ uv를 통해 가상 환경을 자동으로 관리하면서 실행하는 방법�
 
 ## 공식 문서 미러링
 
-LLM이 인터넷 없이도 공식 문서를 사용할 수 있도록 `docs/manifest.yaml`에 정의된 소스를 로컬에 캐시합니다.
+LLM이 인터넷 없이도 공식 문서를 사용할 수 있도록 `docs/manifest.yaml`에 정의된 소스를 로컬에 캐시합니다. now `type: git`, `type: archive` 외에도 `type: http` 항목을 지원하여 Docs 메인 페이지를 JSON/YAML 문서로 관리한 뒤 직접 내려받을 수 있습니다.
 
 ### 1. 문서 동기화
 
@@ -205,13 +205,32 @@ python scripts/sync_docs.py python fastapi
 - Python, FastAPI, React, TypeScript, Go 문서를 기본으로 포함하고 있습니다.
 - 결과는 `docs/mirror/<이름>/<버전>` 구조로 저장되며, `.gitignore`에 의해 저장소 커밋 대상에서 제외됩니다.
 
-### 2. MCP 도구
+### 2. HTTP 기반 문서 정의
+
+`type: http` 항목은 다음 방식으로 정의합니다.
+
+```yaml
+- name: python-main
+  type: http
+  version: "3.12"
+  target: python/main
+  pages_file: pages/python-main.yaml   # JSON 또는 YAML 파일 경로
+  http_headers:
+    User-Agent: "gary-mcp-doc-mirror/1.0"
+  http_timeout: 30
+```
+
+- `pages`: manifest 항목 안에서 직접 URL/경로 목록을 정의할 수 있습니다.
+- `pages_file`: `docs/` 기준 상대 경로로 JSON/YAML 파일을 지정하면, `pages` 목록을 외부 문서로 관리할 수 있습니다. 예시는 `docs/pages/python-main.yaml`을 참고하세요.
+- 각 페이지 정의는 최소 `url`과 저장할 상대 경로(`path`)를 포함합니다. 경로가 없으면 URL을 기반으로 `index.html` 등을 자동 생성합니다.
+
+### 3. MCP 도구
 
 - `sync_official_docs`: MCP 내부에서 문서를 동기화합니다 (`names` 배열로 특정 문서만 선택 가능).
 - `list_official_docs`: 현재 캐시된 문서 목록과 버전을 조회합니다.
 - `search_official_docs`: 미러된 공식 문서를 빠르게 검색합니다 (`name`으로 범위를 제한할 수 있음).
 
-### 3. DocumentService 연동
+### 4. DocumentService 연동
 
 `WORKSPACE_PATH=/Users/gary/Documents/workspace`로 설정하면 `docs/mirror`가 자동으로 인덱싱되므로 기존 `read_document`/`search_documents` 도구에서도 공식 문서를 참조할 수 있습니다. 새로운 문서를 추가하려면 `docs/manifest.yaml`에 항목을 추가한 뒤 `scripts/sync_docs.py`를 실행하면 됩니다.
 

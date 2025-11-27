@@ -1,0 +1,6 @@
+pages:
+  - url: https://docs.python.org/3/
+    path: index.html
+  - url: https://docs.python.org/3/library/index.html
+    path: library/index.html
+
