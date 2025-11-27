@@ -190,7 +190,7 @@ uv를 통해 가상 환경을 자동으로 관리하면서 실행하는 방법�
 
 ## 공식 문서 미러링
 
-LLM이 인터넷 없이도 공식 문서를 사용할 수 있도록 `docs/manifest.yaml`에 정의된 소스를 로컬에 캐시합니다. now `type: git`, `type: archive` 외에도 `type: http` 항목을 지원하여 Docs 메인 페이지를 JSON/YAML 문서로 관리한 뒤 직접 내려받을 수 있습니다.
+LLM이 인터넷 없이도 공식 문서를 사용할 수 있도록 `docs/manifest.yaml`에 정의된 소스를 로컬에 캐시합니다. `type: git`, `type: archive` 외에도 `type: http` 항목으로 AWS/Python/FastAPI/Docker/Kubernetes/Fly.io/PostgreSQL/Redis/Next.js/Tailwind CSS와 같은 문서 메인 URL을 바로 관리할 수 있습니다.
 
 ### 1. 문서 동기화
 
@@ -198,31 +198,40 @@ LLM이 인터넷 없이도 공식 문서를 사용할 수 있도록 `docs/manife
 # 모든 문서를 동기화
 python scripts/sync_docs.py
 
-# 특정 문서만 동기화
-python scripts/sync_docs.py python fastapi
+# 특정 문서만 동기화 (예시)
+python scripts/sync_docs.py python fastapi aws-main docker-main
 ```
 
-- Python, FastAPI, React, TypeScript, Go 문서를 기본으로 포함하고 있습니다.
+- Python, FastAPI, React, TypeScript, Go, AWS, Docker, Kubernetes, Fly.io, PostgreSQL, Redis, Next.js, Tailwind CSS 문서를 기본으로 포함하고 있습니다.
 - 결과는 `docs/mirror/<이름>/<버전>` 구조로 저장되며, `.gitignore`에 의해 저장소 커밋 대상에서 제외됩니다.
 
 ### 2. HTTP 기반 문서 정의
 
-`type: http` 항목은 다음 방식으로 정의합니다.
+`type: http` 항목은 간단히 이름과 URL만으로 정의할 수 있습니다.
 
 ```yaml
 - name: python-main
   type: http
-  version: "3.12"
+  version: "3.x"
   target: python/main
-  pages_file: pages/python-main.yaml   # JSON 또는 YAML 파일 경로
-  http_headers:
-    User-Agent: "gary-mcp-doc-mirror/1.0"
-  http_timeout: 30
+  pages:
+    - url: https://docs.python.org/3/
 ```
 
-- `pages`: manifest 항목 안에서 직접 URL/경로 목록을 정의할 수 있습니다.
-- `pages_file`: `docs/` 기준 상대 경로로 JSON/YAML 파일을 지정하면, `pages` 목록을 외부 문서로 관리할 수 있습니다. 예시는 `docs/pages/python-main.yaml`을 참고하세요.
+- `pages`: manifest 항목 안에서 직접 URL 목록을 정의합니다. `path`를 생략하면 URL 경로를 기반으로 자동으로 파일명이 결정됩니다.
+- `pages_file`: 필요한 경우 `docs/` 기준 JSON/YAML 파일로 URL 목록을 따로 관리할 수 있습니다. (테스트 예시는 `docs/pages/python-main.yaml` 참고)
 - 각 페이지 정의는 최소 `url`과 저장할 상대 경로(`path`)를 포함합니다. 경로가 없으면 URL을 기반으로 `index.html` 등을 자동 생성합니다.
+- 기본 제공 HTTP 문서 목록
+  - `aws-main`: https://docs.aws.amazon.com/
+  - `python-main`: https://docs.python.org/3/
+  - `fastapi-main`: https://fastapi.tiangolo.com/
+  - `docker-main`: https://docs.docker.com/
+  - `kubernetes-main`: https://kubernetes.io/docs/home/
+  - `flyio-main`: https://fly.io/docs/
+  - `postgresql-main`: https://www.postgresql.org/docs/current/index.html
+  - `redis-main`: https://redis.io/docs/latest/
+  - `nextjs-main`: https://nextjs.org/docs
+  - `tailwindcss-main`: https://tailwindcss.com/docs
 
 ### 3. MCP 도구
 
