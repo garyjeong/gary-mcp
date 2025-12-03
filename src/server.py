@@ -17,6 +17,7 @@ from src.tools.db_tool import DatabaseService
 from src.tools.document_tool import DocumentService
 from src.tools.flyio_tool import FlyioService
 from src.tools.github_tool import GitHubService
+from src.tools.mcp_proxy_tool import mcp_proxy_service
 from src.tools.official_docs import OfficialDocsService
 from src.tools.pdf_tool import PDFService
 
@@ -550,21 +551,96 @@ def _build_tool_definitions() -> List[ToolDefinition]:
     ]
 
 
-tool_registry = ToolRegistry(_build_tool_definitions())
+# 기본 도구 정의
+_base_tool_definitions = _build_tool_definitions()
+
+# 프록시 도구는 동적으로 추가됨
+tool_registry = ToolRegistry(_base_tool_definitions)
 app = Server("gary-mcp-server")
+
+# 프록시 서비스 초기화 (비동기)
+_proxy_initialized = False
 
 
 def _to_text_content(payload: Any) -> TextContent:
     return TextContent(type="text", text=json.dumps(payload, ensure_ascii=False, indent=JSON_INDENT))
 
 
+async def _initialize_proxies() -> None:
+    """프록시 서비스를 초기화하고 도구를 등록합니다."""
+    global _proxy_initialized
+    if _proxy_initialized:
+        return
+    
+    try:
+        await mcp_proxy_service.initialize()
+        proxy_tools = await mcp_proxy_service.list_proxy_tools()
+        
+        # 프록시 도구를 동적으로 등록
+        for tool_info in proxy_tools.get("tools", []):
+            if tool_info.get("error"):
+                continue  # 오류가 있는 도구는 건너뛰기
+            
+            tool_name = tool_info["name"]
+            original_name = tool_info.get("original_name", tool_name)
+            
+            # 프록시 이름에서 프록시 서버 식별
+            proxy_name = None
+            for name in ["sequential-thinking", "playwright", "aws-docs", "chrome-devtools", "context7"]:
+                if tool_name.startswith(f"{name}_") or tool_name.startswith(f"{name.replace('-', '_')}_"):
+                    proxy_name = name
+                    break
+            
+            if not proxy_name:
+                # 네임스페이스 접두사로 프록시 식별
+                if tool_name.startswith("thinking_"):
+                    proxy_name = "sequential-thinking"
+                elif tool_name.startswith("playwright_"):
+                    proxy_name = "playwright"
+                elif tool_name.startswith("aws_docs_"):
+                    proxy_name = "aws-docs"
+                elif tool_name.startswith("chrome_"):
+                    proxy_name = "chrome-devtools"
+                elif tool_name.startswith("context7_"):
+                    proxy_name = "context7"
+            
+            if proxy_name:
+                # 프록시 도구 핸들러 생성 (클로저 문제 방지를 위해 로컬 변수 캡처)
+                pname = proxy_name
+                oname = original_name
+                
+                async def proxy_handler(args: dict[str, Any]) -> Any:
+                    return await mcp_proxy_service.call_proxy_tool(pname, oname, args)
+                
+                # ToolDefinition 생성 및 등록
+                proxy_def = ToolDefinition(
+                    name=tool_name,
+                    description=tool_info.get("description", f"Proxy tool from {proxy_name}"),
+                    schema=tool_info.get("inputSchema", {}),
+                    handler=proxy_handler
+                )
+                
+                # ToolRegistry에 동적으로 추가 (내부 딕셔너리에 직접 추가)
+                tool_registry._definitions[tool_name] = proxy_def
+    except Exception as e:
+        # 프록시 초기화 실패는 무시 (기본 도구는 계속 사용 가능)
+        pass
+    
+    _proxy_initialized = True
+
+
 @app.list_tools()
 async def list_tools() -> List[Tool]:
+    # 프록시 도구 초기화 (최초 1회)
+    await _initialize_proxies()
     return tool_registry.list_tools()
 
 
 @app.call_tool()
 async def call_tool(name: str, arguments: dict[str, Any]) -> Sequence[TextContent]:
+    # 프록시 도구 초기화 (최초 1회)
+    await _initialize_proxies()
+    
     handler = tool_registry.get_handler(name)
     if handler is None:
         return [_to_text_content({"error": f"Unknown tool: {name}"})]

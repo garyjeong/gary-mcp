@@ -9,6 +9,12 @@
 - **Fly.io 앱 관리**: Fly.io에 배포된 앱의 상태, 로그, 정보를 조회합니다.
 - **마크다운 PDF 변환**: 프로젝트의 마크다운 문서를 PDF로 변환합니다.
 - **코드 분석**: 프로젝트의 코드 흐름을 분석하고, 연관된 코드를 찾아 재사용 가능한 함수/변수를 식별합니다.
+- **MCP 서버 통합**: Cursor에서 사용하는 다른 MCP 서버들을 자동으로 통합하여 단일 서버에서 모든 도구를 사용할 수 있습니다.
+  - **sequential-thinking**: 사고 과정 도구
+  - **playwright**: 브라우저 자동화
+  - **aws-docs**: AWS 문서 검색
+  - **chrome-devtools**: Chrome 디버깅
+  - **context7**: 컨텍스트 검색
 
 ## 요구사항
 
@@ -548,6 +554,39 @@ SQL 쿼리를 실행합니다 (기본 read-only, 필요시 read-write 모드 지
 - `query` (필수): 검색 키워드
 - `name` (선택): 특정 문서 이름
 - `limit` (선택): 결과 수 제한 (기본 5)
+
+## MCP 서버 통합
+
+gary-mcp는 Cursor에서 사용하는 다른 MCP 서버들을 자동으로 통합합니다. 이를 통해 단일 MCP 서버에서 모든 도구를 사용할 수 있습니다.
+
+### 자동 통합
+
+gary-mcp는 다음 위치의 설정 파일을 자동으로 읽어 외부 MCP 서버를 통합합니다:
+
+1. `~/.cursor/mcp.json`
+2. `~/Library/Application Support/Cursor/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+3. 프로젝트의 `cursor-mcp-local.json`
+
+### 통합된 MCP 서버
+
+다음 MCP 서버들이 자동으로 통합됩니다 (설정 파일에 정의된 경우):
+
+- **sequential-thinking**: 사고 과정 도구 (도구 이름: `thinking_*`)
+- **playwright**: 브라우저 자동화 (도구 이름: `playwright_*`)
+- **aws-docs**: AWS 문서 검색 (도구 이름: `aws_docs_*`)
+- **chrome-devtools**: Chrome 디버깅 (도구 이름: `chrome_*`)
+- **context7**: 컨텍스트 검색 (도구 이름: `context7_*`)
+
+### 네임스페이스
+
+외부 MCP 서버의 도구는 네임스페이스 접두사가 자동으로 추가되어 이름 충돌을 방지합니다. 예를 들어:
+
+- `sequential-thinking`의 도구는 `thinking_` 접두사가 추가됩니다
+- `playwright`의 도구는 `playwright_` 접두사가 추가됩니다
+
+### 통합 비활성화
+
+특정 MCP 서버의 통합을 비활성화하려면, 해당 서버를 설정 파일에서 제거하거나 `gary-mcp` 서버만 사용하도록 설정하세요.
 
 ## 프로젝트 구조
 
