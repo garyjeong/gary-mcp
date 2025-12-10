@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "notion-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "notion-mcp-server",
+        "sh",
+        "-c",
+        "notion-mcp-server"
+      ]
+    },
+    "sequential-thinking-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "sequential-thinking-mcp-server",
+        "sh",
+        "-c",
+        "npx -y @modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "chrome-devtools-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "chrome-devtools-mcp-server",
+        "sh",
+        "-c",
+        "npx -y chrome-devtools-mcp@latest"
+      ]
+    }
+  }
+}

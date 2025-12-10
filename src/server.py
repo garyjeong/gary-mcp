@@ -586,7 +586,7 @@ async def _initialize_proxies() -> None:
             
             # 프록시 이름에서 프록시 서버 식별
             proxy_name = None
-            for name in ["sequential-thinking", "playwright", "aws-docs", "chrome-devtools", "context7"]:
+            for name in ["sequential-thinking", "chrome-devtools"]:
                 if tool_name.startswith(f"{name}_") or tool_name.startswith(f"{name.replace('-', '_')}_"):
                     proxy_name = name
                     break
@@ -595,14 +595,8 @@ async def _initialize_proxies() -> None:
                 # 네임스페이스 접두사로 프록시 식별
                 if tool_name.startswith("thinking_"):
                     proxy_name = "sequential-thinking"
-                elif tool_name.startswith("playwright_"):
-                    proxy_name = "playwright"
-                elif tool_name.startswith("aws_docs_"):
-                    proxy_name = "aws-docs"
                 elif tool_name.startswith("chrome_"):
                     proxy_name = "chrome-devtools"
-                elif tool_name.startswith("context7_"):
-                    proxy_name = "context7"
             
             if proxy_name:
                 # 프록시 도구 핸들러 생성 (클로저 문제 방지를 위해 로컬 변수 캡처)

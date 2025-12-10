@@ -38,24 +38,9 @@ class MCPProxyService:
                     "namespace_prefix": "thinking_"
                 },
                 {
-                    "name": "playwright",
-                    "command": ["npx", "@playwright/mcp@latest"],
-                    "namespace_prefix": "playwright_"
-                },
-                {
-                    "name": "aws-docs",
-                    "url": "https://knowledge-mcp.global.api.aws",
-                    "namespace_prefix": "aws_docs_"
-                },
-                {
                     "name": "chrome-devtools",
                     "command": ["npx", "chrome-devtools-mcp@latest"],
                     "namespace_prefix": "chrome_"
-                },
-                {
-                    "name": "context7",
-                    "url": "https://mcp.context7.com/mcp",
-                    "namespace_prefix": "context7_"
                 }
             ]
             configs = default_configs

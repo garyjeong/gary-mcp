@@ -113,3 +113,60 @@ docs:
     target: tailwindcss/main
     pages:
       - url: https://tailwindcss.com/docs
+
+  # 추가 언어/프레임워크/ORM/DB
+  - name: nodejs-main
+    type: http
+    version: "latest"
+    target: nodejs/main
+    pages:
+      - url: https://nodejs.org/docs/latest/api/
+
+  - name: nestjs-main
+    type: http
+    version: "latest"
+    target: nestjs/main
+    pages:
+      - url: https://docs.nestjs.com/
+
+  - name: vue-main
+    type: http
+    version: "latest"
+    target: vue/main
+    pages:
+      - url: https://vuejs.org/guide/introduction.html
+
+  - name: typeorm-main
+    type: http
+    version: "latest"
+    target: typeorm/main
+    pages:
+      - url: https://typeorm.io/
+
+  - name: prisma-main
+    type: http
+    version: "latest"
+    target: prisma/main
+    pages:
+      - url: https://www.prisma.io/docs
+
+  - name: java-main
+    type: http
+    version: "latest"
+    target: java/main
+    pages:
+      - url: https://docs.oracle.com/en/java/
+
+  - name: spring-main
+    type: http
+    version: "latest"
+    target: spring/main
+    pages:
+      - url: https://docs.spring.io/spring-framework/reference/
+
+  - name: mysql-main
+    type: http
+    version: "latest"
+    target: mysql/main
+    pages:
+      - url: https://dev.mysql.com/doc/

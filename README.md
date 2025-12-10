@@ -11,10 +11,20 @@
 - **코드 분석**: 프로젝트의 코드 흐름을 분석하고, 연관된 코드를 찾아 재사용 가능한 함수/변수를 식별합니다.
 - **MCP 서버 통합**: Cursor에서 사용하는 다른 MCP 서버들을 자동으로 통합하여 단일 서버에서 모든 도구를 사용할 수 있습니다.
   - **sequential-thinking**: 사고 과정 도구
-  - **playwright**: 브라우저 자동화
-  - **aws-docs**: AWS 문서 검색
   - **chrome-devtools**: Chrome 디버깅
-  - **context7**: 컨텍스트 검색
+
+## 아키텍처
+
+이 프로젝트는 **기능별로 독립적인 MCP 서버**로 구성되어 있습니다. 각 서버는 Docker 컨테이너로 실행되며, 필요한 기능만 선택적으로 사용할 수 있습니다.
+
+### 사용 가능한 독립 서버
+
+- **aws-mcp**: AWS CLI 실행 및 리소스 조회
+- **flyio-mcp**: Fly.io 앱 관리
+- **github-mcp**: GitHub CLI 실행 및 레포지토리 관리
+- **db-mcp**: 데이터베이스 접근 및 쿼리 실행
+- **pdf-mcp**: 마크다운→PDF 변환
+- **official-docs-mcp**: 공식 문서 미러링 및 검색
 
 ## 요구사항
 
@@ -25,27 +35,32 @@
 
 ## 설치 및 실행
 
-### 1. Docker 이미지 빌드
+### 방법 1: Docker Compose로 모든 서버 실행 (권장)
 
 ```bash
-# 기본값(/workspace)을 그대로 사용
-docker build -t gary-mcp-server .
+# 모든 MCP 서버를 한 번에 실행
+docker-compose -f docker-compose.mcp.yml up -d
 
-# 또는 워크스페이스 기본 경로를 빌드 시 지정
-docker build --build-arg WORKSPACE_PATH=/workspace -t gary-mcp-server .
+# 특정 서버만 실행
+docker-compose -f docker-compose.mcp.yml up -d aws-mcp db-mcp
+
+# 서버 중지
+docker-compose -f docker-compose.mcp.yml down
 ```
 
-### 2. Docker 컨테이너 실행
+### 방법 2: 개별 Docker 이미지 빌드 및 실행
+
+각 서버를 독립적으로 빌드하고 실행할 수 있습니다:
 
 ```bash
+# AWS 서버 빌드 및 실행
+docker build -f docker/aws-mcp.Dockerfile -t aws-mcp .
 docker run -it --rm \
-  -v /Users/gary/Documents/workspace:/workspace:ro \
   -v ~/.aws:/root/.aws:ro \
   -v ~/.zshrc:/root/.zshrc:ro \
-  -e WORKSPACE_PATH=/workspace \
   -e AWS_PROFILE=jongmun \
   -e SHELL_RC_PATH=/root/.zshrc \
-  gary-mcp-server
+  aws-mcp
 ```
 
 **볼륨/환경 설명:**
@@ -554,6 +569,29 @@ SQL 쿼리를 실행합니다 (기본 read-only, 필요시 read-write 모드 지
 - `query` (필수): 검색 키워드
 - `name` (선택): 특정 문서 이름
 - `limit` (선택): 결과 수 제한 (기본 5)
+- `structured` (선택): `true` 시 파서/인덱스 기반 섹션 검색
+
+#### `resolve_library_id`
+라이브러리 이름으로 ID와 메타데이터를 조회합니다.
+
+**파라미터:**
+- `name` (필수): 예) react, next.js, typescript, python, spring, mysql
+
+#### `list_libraries`
+지원 라이브러리 목록을 반환합니다.
+
+**파라미터:**
+- `category` (선택): framework | language | orm | database | cloud
+- `available_only` (선택): 동기화 가능한 항목만 필터
+
+#### `get_library_docs`
+Context7 스타일로 라이브러리 문서를 조회합니다.
+
+**파라미터:**
+- `library_id` (필수): 예) `/libraries/react`
+- `mode` (선택): `info` | `code` (기본 info)
+- `topic` (선택): 특정 주제 키워드 (예: hooks, routing)
+- `limit` (선택): 검색 결과 제한 (기본 5, topic 지정 시 적용)
 
 ## MCP 서버 통합
 
@@ -572,17 +610,14 @@ gary-mcp는 다음 위치의 설정 파일을 자동으로 읽어 외부 MCP 서
 다음 MCP 서버들이 자동으로 통합됩니다 (설정 파일에 정의된 경우):
 
 - **sequential-thinking**: 사고 과정 도구 (도구 이름: `thinking_*`)
-- **playwright**: 브라우저 자동화 (도구 이름: `playwright_*`)
-- **aws-docs**: AWS 문서 검색 (도구 이름: `aws_docs_*`)
 - **chrome-devtools**: Chrome 디버깅 (도구 이름: `chrome_*`)
-- **context7**: 컨텍스트 검색 (도구 이름: `context7_*`)
 
 ### 네임스페이스
 
 외부 MCP 서버의 도구는 네임스페이스 접두사가 자동으로 추가되어 이름 충돌을 방지합니다. 예를 들어:
 
 - `sequential-thinking`의 도구는 `thinking_` 접두사가 추가됩니다
-- `playwright`의 도구는 `playwright_` 접두사가 추가됩니다
+- `chrome-devtools`의 도구는 `chrome_` 접두사가 추가됩니다
 
 ### 통합 비활성화
 
@@ -594,8 +629,17 @@ gary-mcp는 다음 위치의 설정 파일을 자동으로 읽어 외부 MCP 서
 gary-mcp/
 ├── src/
 │   ├── __init__.py
-│   ├── server.py              # MCP 서버 메인 진입점
-│   ├── tools/
+│   ├── server.py              # 통합 MCP 서버 (레거시)
+│   ├── servers/               # 독립적인 MCP 서버들
+│   │   ├── __init__.py
+│   │   ├── base_server.py     # 공통 서버 베이스 클래스
+│   │   ├── aws_server.py       # AWS 서버
+│   │   ├── flyio_server.py    # Fly.io 서버
+│   │   ├── github_server.py   # GitHub 서버
+│   │   ├── db_server.py       # 데이터베이스 서버
+│   │   ├── pdf_server.py      # PDF 변환 서버
+│   │   └── official_docs_server.py  # 공식 문서 서버
+│   ├── tools/                 # 도구 서비스 클래스들
 │   │   ├── __init__.py
 │   │   ├── document_tool.py   # 문서 참조 도구
 │   │   ├── aws_tool.py        # AWS CLI 도구
@@ -610,6 +654,15 @@ gary-mcp/
 │       ├── __init__.py
 │       ├── file_utils.py      # 파일 유틸리티
 │       └── env_loader.py      # 환경 변수/시크릿 로더
+├── docker/                    # 각 서버용 Dockerfile
+│   ├── base.Dockerfile        # 공통 베이스
+│   ├── aws-mcp.Dockerfile
+│   ├── flyio-mcp.Dockerfile
+│   ├── github-mcp.Dockerfile
+│   ├── db-mcp.Dockerfile
+│   ├── pdf-mcp.Dockerfile
+│   └── official-docs-mcp.Dockerfile
+├── docker-compose.mcp.yml     # 모든 서버를 위한 Docker Compose 설정
 ├── tests/
 │   ├── __init__.py
 │   ├── test_document_service.py
@@ -618,7 +671,7 @@ gary-mcp/
 │   ├── test_cli_services.py
 │   └── test_db_tool.py        # DB 도구 테스트
 ├── pyproject.toml             # uv 프로젝트 설정
-├── Dockerfile                 # Docker 이미지 정의
+├── Dockerfile                 # 통합 서버용 Docker 이미지 (레거시)
 ├── .dockerignore              # Docker 빌드 제외 파일
 ├── .env.example               # 환경 변수 예시
 └── README.md                  # 이 파일

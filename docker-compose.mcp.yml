@@ -1,0 +1,144 @@
+# 환경 변수 파일 (.env.mcp)이 있으면 자동으로 로드됩니다
+# 각 서비스에서 env_file을 사용하여 명시적으로 로드할 수도 있습니다
+
+services:
+  # 외부 MCP 서버들
+  notion-mcp:
+    image: mcp/notion:latest
+    container_name: notion-mcp-server
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env.mcp
+    environment:
+      - NOTION_TOKEN=${NOTION_TOKEN}
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  sequential-thinking-mcp:
+    build:
+      context: .
+      dockerfile: docker/node-mcp.Dockerfile
+      args:
+        - MCP_PACKAGE=@modelcontextprotocol/server-sequential-thinking
+    container_name: sequential-thinking-mcp-server
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  chrome-devtools-mcp:
+    build:
+      context: .
+      dockerfile: docker/node-mcp.Dockerfile
+      args:
+        - MCP_PACKAGE=chrome-devtools-mcp@latest
+    container_name: chrome-devtools-mcp-server
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  # Gary MCP 서버들 (기능별 분리)
+  aws-mcp:
+    build:
+      context: .
+      dockerfile: docker/aws-mcp.Dockerfile
+    container_name: aws-mcp-server
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${HOME}/.aws:/root/.aws:ro
+      - ${HOME}/.zshrc:/root/.zshrc:ro
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE:-jongmun}
+      - SHELL_RC_PATH=/root/.zshrc
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  flyio-mcp:
+    build:
+      context: .
+      dockerfile: docker/flyio-mcp.Dockerfile
+    container_name: flyio-mcp-server
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${HOME}/.zshrc:/root/.zshrc:ro
+    environment:
+      - SHELL_RC_PATH=/root/.zshrc
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  github-mcp:
+    build:
+      context: .
+      dockerfile: docker/github-mcp.Dockerfile
+    container_name: github-mcp-server
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${HOME}/.zshrc:/root/.zshrc:ro
+    environment:
+      - SHELL_RC_PATH=/root/.zshrc
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  db-mcp:
+    build:
+      context: .
+      dockerfile: docker/db-mcp.Dockerfile
+    container_name: db-mcp-server
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${HOME}/.aws:/root/.aws:ro
+      - ${HOME}/.zshrc:/root/.zshrc:ro
+      - ./.env:/app/.env:ro
+    environment:
+      - SHELL_RC_PATH=/root/.zshrc
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  pdf-mcp:
+    build:
+      context: .
+      dockerfile: docker/pdf-mcp.Dockerfile
+    container_name: pdf-mcp-server
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${WORKSPACE_PATH:-/Users/gary/Documents/workspace}:/workspace:ro
+    environment:
+      - WORKSPACE_PATH=/workspace
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  official-docs-mcp:
+    build:
+      context: .
+      dockerfile: docker/official-docs-mcp.Dockerfile
+    container_name: official-docs-mcp-server
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${WORKSPACE_PATH:-/Users/gary/Documents/workspace}:/workspace:ro
+      - ./docs:/app/docs
+    environment:
+      - WORKSPACE_PATH=/workspace
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge
+

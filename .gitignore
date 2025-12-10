@@ -8,6 +8,7 @@ build/
 .DS_Store
 .env
 .env.*
+.env.mcp
 awscliv2.zip
 docs/mirror/
 docs/sources/
