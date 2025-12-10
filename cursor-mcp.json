@@ -32,6 +32,72 @@
         "-c",
         "npx -y chrome-devtools-mcp@latest"
       ]
+    },
+    "aws-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "aws-mcp-server",
+        "python",
+        "-m",
+        "src.servers.aws_server"
+      ]
+    },
+    "github-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "github-mcp-server",
+        "python",
+        "-m",
+        "src.servers.github_server"
+      ]
+    },
+    "db-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "db-mcp-server",
+        "python",
+        "-m",
+        "src.servers.db_server"
+      ]
+    },
+    "flyio-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "flyio-mcp-server",
+        "python",
+        "-m",
+        "src.servers.flyio_server"
+      ]
+    },
+    "pdf-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "pdf-mcp-server",
+        "python",
+        "-m",
+        "src.servers.pdf_server"
+      ]
+    },
+    "official-docs-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "official-docs-mcp-server",
+        "python",
+        "-m",
+        "src.servers.official_docs_server"
+      ]
     }
   }
 }
