@@ -29,21 +29,36 @@ class GitHubService:
         limit: int = 20,
         sort: str = "updated"
     ) -> Dict[str, Any]:
+        # GitHub CLI는 --sort 플래그를 지원하지 않으므로 limit을 늘려서 받고 Python에서 정렬
+        fetch_limit = limit * 2 if limit > 10 else 50  # 정렬을 위해 더 많이 가져옴
+        
         args = [
             "repo",
             "list",
             "--limit",
-            str(limit),
+            str(fetch_limit),
             "--json",
-            "nameWithOwner,description,visibility,updatedAt" ,
-            "--sort",
-            sort,
+            "nameWithOwner,description,visibility,updatedAt",
         ]
         if owner:
             args.extend(["--owner", owner])
         if visibility:
             args.extend(["--visibility", visibility])
-        return await self.execute(args)
+        
+        result = await self.execute(args)
+        
+        # Python에서 정렬
+        if isinstance(result.get("output"), list):
+            repos = result["output"]
+            reverse = sort in ("updated", "created", "pushed")
+            if sort == "updated":
+                repos.sort(key=lambda x: x.get("updatedAt", ""), reverse=reverse)
+            elif sort == "name":
+                repos.sort(key=lambda x: x.get("nameWithOwner", ""), reverse=reverse)
+            # limit 적용
+            result["output"] = repos[:limit]
+        
+        return result
 
     async def list_pull_requests(
         self,

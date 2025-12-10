@@ -46,7 +46,7 @@ services:
   aws-mcp:
     build:
       context: .
-      dockerfile: docker/aws-mcp.Dockerfile
+      dockerfile: docker/aws-cli-mcp.Dockerfile
     container_name: aws-mcp-server
     stdin_open: true
     tty: true
@@ -78,7 +78,7 @@ services:
   github-mcp:
     build:
       context: .
-      dockerfile: docker/github-mcp.Dockerfile
+      dockerfile: docker/github-cli-mcp.Dockerfile
     container_name: github-mcp-server
     stdin_open: true
     tty: true

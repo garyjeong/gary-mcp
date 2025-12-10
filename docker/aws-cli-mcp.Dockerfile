@@ -19,11 +19,16 @@ COPY pyproject.toml ./
 COPY README.md ./
 COPY src/ ./src/
 
-# AWS CLI 설치
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
-    && unzip awscliv2.zip \
-    && ./aws/install \
-    && rm -rf awscliv2.zip aws
+# AWS CLI 설치 (아키텍처 자동 감지)
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"; \
+    else \
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; \
+    fi && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm -rf awscliv2.zip aws
 
 RUN uv pip install --system mcp[cli]>=1.0.0 aiohttp>=3.9.0 python-dotenv>=1.0.0 boto3>=1.34.0 requests>=2.31.0
 RUN uv pip install --system -e .

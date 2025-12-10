@@ -31,14 +31,12 @@ usage() {
     echo ""
     echo "서비스명 (선택사항):"
     echo "  notion-mcp"
-    echo "  obsidian-mcp"
     echo "  sequential-thinking-mcp"
     echo "  chrome-devtools-mcp"
     echo ""
     echo "예시:"
     echo "  $0 start                          # 모든 서버 시작"
     echo "  $0 start notion-mcp               # Notion MCP만 시작"
-    echo "  $0 logs obsidian-mcp              # Obsidian MCP 로그 확인"
 }
 
 # 함수: 환경 변수 파일 확인

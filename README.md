@@ -54,7 +54,7 @@ docker-compose -f docker-compose.mcp.yml down
 
 ```bash
 # AWS 서버 빌드 및 실행
-docker build -f docker/aws-mcp.Dockerfile -t aws-mcp .
+docker build -f docker/aws-cli-mcp.Dockerfile -t aws-mcp .
 docker run -it --rm \
   -v ~/.aws:/root/.aws:ro \
   -v ~/.zshrc:/root/.zshrc:ro \
@@ -656,9 +656,9 @@ gary-mcp/
 │       └── env_loader.py      # 환경 변수/시크릿 로더
 ├── docker/                    # 각 서버용 Dockerfile
 │   ├── base.Dockerfile        # 공통 베이스
-│   ├── aws-mcp.Dockerfile
+│   ├── aws-cli-mcp.Dockerfile
 │   ├── flyio-mcp.Dockerfile
-│   ├── github-mcp.Dockerfile
+│   ├── github-cli-mcp.Dockerfile
 │   ├── db-mcp.Dockerfile
 │   ├── pdf-mcp.Dockerfile
 │   └── official-docs-mcp.Dockerfile
