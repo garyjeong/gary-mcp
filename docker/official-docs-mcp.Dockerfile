@@ -26,6 +26,8 @@ RUN uv pip install --system \
     mcp[cli]>=1.0.0 \
     aiohttp>=3.9.0 \
     python-dotenv>=1.0.0 \
+    markdown>=3.5.0 \
+    beautifulsoup4>=4.12.0 \
     pyyaml>=6.0 \
     requests>=2.31.0
 RUN uv pip install --system -e .
