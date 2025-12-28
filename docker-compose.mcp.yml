@@ -42,6 +42,17 @@ services:
     networks:
       - mcp-network
 
+  playwright-mcp:
+    build:
+      context: .
+      dockerfile: docker/playwright-mcp.Dockerfile
+    container_name: playwright-mcp-server
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
   # Gary MCP 서버들 (기능별 분리)
   aws-mcp:
     build:

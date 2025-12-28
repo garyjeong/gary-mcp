@@ -33,6 +33,17 @@
         "npx -y chrome-devtools-mcp@latest"
       ]
     },
+    "playwright-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "playwright-mcp-server",
+        "npx",
+        "-y",
+        "@playwright/mcp"
+      ]
+    },
     "aws-mcp": {
       "command": "docker",
       "args": [
