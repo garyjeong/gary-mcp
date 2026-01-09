@@ -149,6 +149,23 @@ services:
     networks:
       - mcp-network
 
+  hyperbrowser-mcp:
+    build:
+      context: .
+      dockerfile: docker/hyperbrowser-mcp.Dockerfile
+      args:
+        - HYPERBROWSER_API_KEY=${HYPERBROWSER_API_KEY}
+    container_name: hyperbrowser-mcp-server
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env.mcp
+    environment:
+      - HYPERBROWSER_API_KEY=${HYPERBROWSER_API_KEY}
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
 networks:
   mcp-network:
     driver: bridge

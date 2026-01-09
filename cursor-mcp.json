@@ -109,6 +109,15 @@
         "-m",
         "src.servers.official_docs_server"
       ]
+    },
+    "hyperbrowser-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "hyperbrowser-mcp-server",
+        "hyperbrowser-mcp"
+      ]
     }
   }
 }

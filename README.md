@@ -12,6 +12,7 @@
 - **MCP 서버 통합**: Cursor에서 사용하는 다른 MCP 서버들을 자동으로 통합하여 단일 서버에서 모든 도구를 사용할 수 있습니다.
   - **sequential-thinking**: 사고 과정 도구
   - **chrome-devtools**: Chrome 디버깅
+  - **hyperbrowser-mcp**: 웹 스크래핑, 크롤링, AI 브라우저 에이전트
 
 ## 아키텍처
 
@@ -25,6 +26,7 @@
 - **db-mcp**: 데이터베이스 접근 및 쿼리 실행
 - **pdf-mcp**: 마크다운→PDF 변환
 - **official-docs-mcp**: 공식 문서 미러링 및 검색
+- **hyperbrowser-mcp**: 웹 스크래핑, 크롤링, 구조화 데이터 추출 및 브라우저 자동화 에이전트
 
 ## 요구사항
 
@@ -611,6 +613,20 @@ gary-mcp는 다음 위치의 설정 파일을 자동으로 읽어 외부 MCP 서
 
 - **sequential-thinking**: 사고 과정 도구 (도구 이름: `thinking_*`)
 - **chrome-devtools**: Chrome 디버깅 (도구 이름: `chrome_*`)
+- **hyperbrowser-mcp**: 웹 스크래핑/크롤링/AI 브라우저 에이전트 (도구 이름: `hyperbrowser_*`)
+
+### Hyperbrowser MCP 도구
+
+[Hyperbrowser MCP](https://github.com/hyperbrowserai/mcp)는 다음 도구들을 제공합니다:
+
+- `scrape_webpage`: 웹페이지에서 콘텐츠 추출 (마크다운, 스크린샷 등)
+- `crawl_webpages`: 연결된 페이지들을 탐색하며 LLM 친화적 포맷으로 추출
+- `extract_structured_data`: HTML을 구조화된 JSON으로 변환
+- `search_with_bing`: Bing 검색 실행
+- `browser_use_agent`: Browser Use 에이전트를 사용한 브라우저 자동화
+- `openai_computer_use_agent`: OpenAI CUA 모델을 사용한 범용 자동화
+- `claude_computer_use_agent`: Claude Computer Use를 사용한 복잡한 브라우저 작업
+- `create_profile` / `delete_profile` / `list_profiles`: 영구 프로필 관리
 
 ### 네임스페이스
 
@@ -618,6 +634,7 @@ gary-mcp는 다음 위치의 설정 파일을 자동으로 읽어 외부 MCP 서
 
 - `sequential-thinking`의 도구는 `thinking_` 접두사가 추가됩니다
 - `chrome-devtools`의 도구는 `chrome_` 접두사가 추가됩니다
+- `hyperbrowser-mcp`의 도구는 `hyperbrowser_` 접두사가 추가됩니다
 
 ### 통합 비활성화
 
